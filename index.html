@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoGuard: Location Data, Ethics & Law (Standard 5.3)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Handwritten-sans webfont fallback (Patrick Hand & Comic Neue) paired with HelvetiHand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['HelvetiHand', '"Patrick Hand"', '"Comic Neue"', 'cursive', 'sans-serif'],
+            mono: ['HelvetiHand', '"Patrick Hand"', '"Comic Neue"', 'monospace'],
+          },
+          colors: {
+            plum: {
+              850: '#241046',
+              900: '#1a0b36',
+              950: '#120826',
+            },
+            orchid: {
+              300: '#e9d5ff',
+              400: '#c084fc',
+              500: '#a855f7',
+              600: '#9333ea',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* HelvetiHand primary font stack with Patrick Hand & Comic Neue webfont fallback */
+    @font-face {
+      font-family: 'HelvetiHand';
+      src: local('HelvetiHand'), local('HelvetiHand-Regular');
+      font-display: swap;
+    }
+    html, body, button, input, select, textarea {
+      font-family: 'HelvetiHand', 'Patrick Hand', 'Comic Neue', cursive, sans-serif;
+      letter-spacing: 0.015em;
+    }
+    /* Purple Cloud Theme: Twilight-violet to lavender-indigo gradient + glassmorphism */
+    body {
+      background: linear-gradient(160deg, #120826 0%, #241046 48%, #3b1c6e 100%);
+      background-attachment: fixed;
+      color: #f8f5ff;
+      overflow-x: hidden;
+    }
+    .cloud-card {
+      background: rgba(36, 16, 70, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(192, 132, 252, 0.24);
+      box-shadow: 0 10px 35px rgba(18, 8, 38, 0.45), inset 0 1px 0 rgba(233, 213, 255, 0.12);
+    }
+    .cloud-subcard {
+      background: rgba(22, 9, 46, 0.72);
+      border: 1px solid rgba(192, 132, 252, 0.2);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: manipulation;
+    }
+    @keyframes float-cloud-slow {
+      0%, 100% { transform: translateX(0px) translateY(0px); }
+      50% { transform: translateX(18px) translateY(-6px); }
+    }
+    @keyframes float-cloud-reverse {
+      0%, 100% { transform: translateX(0px) translateY(0px); }
+      50% { transform: translateX(-20px) translateY(5px); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 14px rgba(192, 132, 252, 0.35); }
+      50% { box-shadow: 0 0 26px rgba(232, 121, 249, 0.65); }
+    }
+    .animate-cloud-1 {
+      animation: float-cloud-slow 12s ease-in-out infinite;
+    }
+    .animate-cloud-2 {
+      animation: float-cloud-reverse 15s ease-in-out infinite;
+    }
+    .badge-glow {
+      animation: pulse-glow 2.5s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-fuchsia-500/30 selection:text-fuchsia-200 relative">
+
+  <!-- Decorative Ambient Purple Cloud Background Layer -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+    <svg class="absolute -top-10 -left-16 w-[460px] h-[220px] text-purple-500/15 animate-cloud-1" viewBox="0 0 400 180" fill="currentColor">
+      <path d="M90 150h220c38 0 68-28 68-64 0-33-25-60-57-63C308 8 282 0 253 0c-37 0-69 21-83 52-10-5-22-8-34-8-41 0-74 32-76 72-24 6-42 28-42 54 0 14 30 20 72 20z"/>
+    </svg>
+    <svg class="absolute top-1/3 -right-20 w-[520px] h-[240px] text-fuchsia-400/10 animate-cloud-2" viewBox="0 0 400 180" fill="currentColor">
+      <path d="M90 150h220c38 0 68-28 68-64 0-33-25-60-57-63C308 8 282 0 253 0c-37 0-69 21-83 52-10-5-22-8-34-8-41 0-74 32-76 72-24 6-42 28-42 54 0 14 30 20 72 20z"/>
+    </svg>
+    <svg class="absolute bottom-8 left-1/4 w-[480px] h-[210px] text-indigo-400/10 animate-cloud-1" viewBox="0 0 400 180" fill="currentColor">
+      <path d="M90 150h220c38 0 68-28 68-64 0-33-25-60-57-63C308 8 282 0 253 0c-37 0-69 21-83 52-10-5-22-8-34-8-41 0-74 32-76 72-24 6-42 28-42 54 0 14 30 20 72 20z"/>
+    </svg>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 backdrop-blur-md bg-[#120826]/80 border-b border-purple-400/20">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <!-- Custom Inline SVG Cloud-Shield Logo -->
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500/30 to-fuchsia-500/20 border border-purple-300/40 flex items-center justify-center text-purple-200 shadow-inner">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+            <circle cx="12" cy="13" r="2" fill="currentColor" />
+          </svg>
+        </div>
+        <div>
+          <span class="font-mono text-xs uppercase tracking-wider text-purple-300 font-semibold block">CS Standard 5.3 • US Federal Jurisdiction</span>
+          <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-[#f8f5ff]">GeoGuard: Location Data, Ethics & Law</h1>
+        </div>
+      </div>
+
+      <nav class="flex items-center gap-2 sm:gap-3 text-sm font-medium">
+        <a href="#concepts" class="px-3 py-1.5 rounded-xl text-[#dcd2f7] hover:text-white hover:bg-purple-500/20 transition">Ethics vs. Law</a>
+        <a href="#simulator" class="px-3 py-1.5 rounded-xl text-[#dcd2f7] hover:text-white hover:bg-purple-500/20 transition">Case Lab</a>
+        <a href="#game-section" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/30 to-fuchsia-500/30 text-purple-100 border border-purple-300/40 hover:from-purple-500/45 hover:to-fuchsia-500/45 transition shadow-sm">Play Mini-Game</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="relative z-10 flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-12">
+
+    <!-- SECTION 1: Hero & Core Distinction (5.3.4 vs 5.3.5) -->
+    <section id="concepts" class="space-y-6">
+      <div class="cloud-card rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+        <!-- Decorative SVG Cloud Accent in Hero Corner -->
+        <svg class="absolute -right-8 -top-8 w-56 h-28 text-purple-400/15 pointer-events-none" viewBox="0 0 240 120" fill="currentColor">
+          <path d="M55 105h135c24 0 42-18 42-40 0-21-15-38-35-40C189 10 172 2 154 2c-23 0-43 13-52 33-6-3-14-5-21-5-26 0-46 20-47 45-15 4-26 18-26 34 0 9 19 13 47 13z"/>
+        </svg>
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div class="space-y-3 max-w-3xl">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/20 border border-purple-300/35 text-purple-200 text-xs font-mono">
+              <svg class="w-3.5 h-3.5 text-fuchsia-300" fill="currentColor" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+              <span>Performance Standard 5.3</span>
+              <span>•</span>
+              <span>Safety, Law & Ethics in Computing</span>
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-[#f8f5ff] leading-tight">
+              Every GPS Ping Floats to the Cloud. <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-fuchsia-300 to-teal-300">Who Gets to Read It?</span>
+            </h2>
+            <p class="text-[#dcd2f7] text-base sm:text-lg leading-relaxed">
+              Modern smartphones continuously beam precise GPS coordinates, Wi-Fi beacons, and movement speed into cloud servers. While navigation apps need this to route traffic, unchecked tracking creates severe physical safety and privacy risks. Understanding computing responsibility requires separating <strong class="text-white">ethical design</strong> from <strong class="text-white">legal compliance</strong>.
+            </p>
+          </div>
+
+          <!-- Status Card for Student Progress -->
+          <div class="cloud-subcard rounded-2xl p-4 sm:p-5 min-w-[245px] flex flex-col justify-between gap-3">
+            <div class="text-xs font-mono uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+              <span>☁️</span>
+              <span>Cloud Mastery Tracker</span>
+            </div>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-[#dcd2f7]">Cases Solved:</span>
+                <span id="tracker-cases" class="font-mono font-bold text-teal-300">0 / 3</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[#dcd2f7]">Checkpoint Quiz:</span>
+                <span id="tracker-quiz" class="font-mono font-bold text-fuchsia-300">Pending</span>
+              </div>
+            </div>
+            <div id="certified-badge" class="hidden mt-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/30 to-teal-500/30 border border-purple-300 text-white text-xs font-bold text-center badge-glow">
+              ★ PRIVACY GUARDIAN CERTIFIED
+            </div>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Comparison Cards: 5.3.4 Ethics vs 5.3.5 Law -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <!-- Standard 5.3.4: Ethics -->
+          <div class="cloud-subcard border-fuchsia-400/30 rounded-2xl p-6 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-lg bg-fuchsia-500/20 text-fuchsia-200 font-mono text-xs font-bold">Standard 5.3.4 • ETHICS</span>
+              <span class="text-xs text-purple-300">What Developers <em>Should</em> Do</span>
+            </div>
+            <h3 class="text-xl font-bold text-[#f8f5ff]">Computing Ethics & Moral Responsibility</h3>
+            <p class="text-sm text-[#dcd2f7] leading-relaxed">
+              Ethics involves moral principles that guide software engineers even when no specific statute forbids an action. Ethical cloud software respects human autonomy and minimizes harm.
+            </p>
+            <ul class="space-y-2 text-sm text-[#dcd2f7] pt-1">
+              <li class="flex items-start gap-2">
+                <span class="text-fuchsia-300 font-bold">▸</span>
+                <span><strong class="text-white">Data Minimization:</strong> Collecting only approximate location (city-level) if pinpoint GPS isn't required for the app's core function.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-fuchsia-300 font-bold">▸</span>
+                <span><strong class="text-white">Avoiding Dark Patterns:</strong> Making "Deny Location" just as easy to tap as "Allow Always."</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-fuchsia-300 font-bold">▸</span>
+                <span><strong class="text-white">Confidentiality & NDAs:</strong> Developers sign Non-Disclosure Agreements (NDAs) to protect proprietary algorithms and sensitive user datasets from unauthorized leaks.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Standard 5.3.5: Law & Regulations -->
+          <div class="cloud-subcard border-teal-400/30 rounded-2xl p-6 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-200 font-mono text-xs font-bold">Standard 5.3.5 • LAW (U.S. FEDERAL)</span>
+              <span class="text-xs text-purple-300">What Developers <em>Must</em> Do</span>
+            </div>
+            <h3 class="text-xl font-bold text-[#f8f5ff]">Federal Laws & Enforceable Regulations</h3>
+            <p class="text-sm text-[#dcd2f7] leading-relaxed">
+              Laws are binding rules enforced by government agencies with financial penalties and legal injunctions. In the <strong class="text-teal-300">United States (Federal Jurisdiction)</strong>, two key statutes govern location tracking:
+            </p>
+            <ul class="space-y-2 text-sm text-[#dcd2f7] pt-1">
+              <li class="flex items-start gap-2">
+                <span class="text-teal-300 font-bold">▸</span>
+                <span><strong class="text-white">FTC Act Section 5 (15 U.S.C. § 45):</strong> Prohibits "unfair or deceptive acts." Secretly selling user GPS history after claiming data is "private" is illegal deception.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-teal-300 font-bold">▸</span>
+                <span><strong class="text-white">COPPA (15 U.S.C. §§ 6501–6506):</strong> Strictly requires verifiable parental consent before collecting precise geolocation data from children under age 13.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-teal-300 font-bold">▸</span>
+                <span><strong class="text-white">Data Security Mandates:</strong> Storing unencrypted sensitive location logs in the cloud that expose users to stalking or identity theft triggers federal enforcement.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stylized Cloud Section Divider -->
+    <div class="flex items-center justify-center gap-3 text-purple-300/40" aria-hidden="true">
+      <div class="h-px flex-grow bg-gradient-to-r from-transparent via-purple-400/30 to-transparent"></div>
+      <svg class="w-8 h-5" fill="currentColor" viewBox="0 0 24 16"><path d="M17.5 15H6a5 5 0 1 1 .8-9.93A6 6 0 0 1 18.4 6.5 4.25 4.25 0 0 1 17.5 15z"/></svg>
+      <div class="h-px flex-grow bg-gradient-to-r from-transparent via-purple-400/30 to-transparent"></div>
+    </div>
+
+    <!-- SECTION 2: Interactive "Ethics vs. Law" Scenario Explorer -->
+    <section id="simulator" class="cloud-card rounded-3xl p-6 sm:p-8 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-400/20 pb-4">
+        <div>
+          <span class="font-mono text-xs uppercase tracking-wider text-purple-300">☁️ Interactive Case Lab</span>
+          <h2 class="text-2xl font-bold text-[#f8f5ff] mt-0.5">Analyze Real-World GPS Dilemmas</h2>
+          <p class="text-sm text-[#dcd2f7] mt-1">Evaluate each software behavior under U.S. Federal Law and Computing Ethics. Select a scenario tab, then classify the violation.</p>
+        </div>
+        <!-- Scenario Selector Pills -->
+        <div class="flex flex-wrap gap-2" role="tablist">
+          <button onclick="selectScenario(0)" id="tab-0" class="px-4 py-2 rounded-xl text-sm font-semibold transition border bg-purple-500/30 border-purple-300 text-white shadow-sm">
+            Case 1: Flashlight App
+          </button>
+          <button onclick="selectScenario(1)" id="tab-1" class="px-4 py-2 rounded-xl text-sm font-semibold transition border bg-[#16092e]/80 border-purple-400/25 text-purple-300 hover:text-white">
+            Case 2: Kids' AR Game
+          </button>
+          <button onclick="selectScenario(2)" id="tab-2" class="px-4 py-2 rounded-xl text-sm font-semibold transition border bg-[#16092e]/80 border-purple-400/25 text-purple-300 hover:text-white">
+            Case 3: Teen Social Map
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Scenario Display -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-7 cloud-subcard rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <span id="case-badge" class="px-3 py-1 rounded-full text-xs font-mono bg-purple-500/20 text-purple-200 border border-purple-400/30">SCENARIO 1 OF 3</span>
+            <span id="case-status" class="text-xs font-mono text-purple-300">Unsolved</span>
+          </div>
+          <h3 id="case-title" class="text-xl font-bold text-[#f8f5ff]">The "Free" BrightBeam Flashlight App</h3>
+          <p id="case-desc" class="text-[#dcd2f7] text-sm sm:text-base leading-relaxed">
+            A free mobile flashlight app claims in its privacy policy that it "only uses device sensors to improve lighting performance." Behind the scenes, its code harvests precise GPS coordinates every 60 seconds and sells the movement logs to third-party data brokers without telling users.
+          </p>
+
+          <div class="pt-2">
+            <p class="text-xs font-mono uppercase tracking-wider text-purple-300 mb-3">How does this classify under Standard 5.3?</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button onclick="evaluateScenario('ethics')" class="p-3.5 rounded-2xl bg-[#1e0d3d] hover:bg-fuchsia-950/70 border border-purple-400/25 hover:border-fuchsia-300 text-left transition group">
+                <div class="font-bold text-fuchsia-300 group-hover:text-fuchsia-200 text-sm">Ethical Issue Only</div>
+                <div class="text-xs text-purple-200/75 mt-0.5">Legal, but violates moral trust</div>
+              </button>
+              <button onclick="evaluateScenario('law')" class="p-3.5 rounded-2xl bg-[#1e0d3d] hover:bg-teal-950/70 border border-purple-400/25 hover:border-teal-300 text-left transition group">
+                <div class="font-bold text-teal-300 group-hover:text-teal-200 text-sm">Legal Violation Only</div>
+                <div class="text-xs text-purple-200/75 mt-0.5">Breaks federal statute strictly</div>
+              </button>
+              <button onclick="evaluateScenario('both')" class="p-3.5 rounded-2xl bg-[#1e0d3d] hover:bg-purple-800/60 border border-purple-400/25 hover:border-purple-200 text-left transition group">
+                <div class="font-bold text-purple-200 group-hover:text-white text-sm">Both Ethics & Law</div>
+                <div class="text-xs text-purple-200/75 mt-0.5">Unethical AND breaks U.S. law</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanatory Feedback Box -->
+        <div id="case-feedback-panel" class="lg:col-span-5 cloud-subcard rounded-2xl p-6 min-h-[250px] flex flex-col justify-center">
+          <div id="case-feedback-placeholder" class="text-center space-y-2 py-6">
+            <div class="w-12 h-12 rounded-full bg-purple-500/20 border border-purple-300/40 mx-auto flex items-center justify-center text-purple-200 font-mono font-bold">?</div>
+            <p class="text-sm font-medium text-[#f8f5ff]">Select an evaluation button on the left</p>
+            <p class="text-xs text-purple-300/80">You will receive a legal & ethical breakdown explaining why the practice violates Standard 5.3.4, 5.3.5, or both.</p>
+          </div>
+          <div id="case-feedback-content" class="hidden space-y-3">
+            <div id="feedback-verdict" class="inline-block px-3 py-1 rounded-lg text-xs font-bold font-mono"></div>
+            <h4 id="feedback-heading" class="text-lg font-bold text-[#f8f5ff]"></h4>
+            <p id="feedback-explanation" class="text-sm text-[#dcd2f7] leading-relaxed"></p>
+            <div id="feedback-takeaway" class="p-3 rounded-xl bg-[#120826]/90 border border-purple-400/30 text-xs text-teal-300 font-mono"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: "Data Leak Dodger" Flappy Bird Mini-Game -->
+    <section id="game-section" class="cloud-card rounded-3xl p-6 sm:p-8 space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="font-mono text-xs uppercase tracking-wider text-purple-300">☁️ Interactive Cloud Simulation • Mini-Game</span>
+          <h2 class="text-2xl font-bold text-[#f8f5ff] mt-0.5">Data Leak Dodger: Encrypted Cloud Run</h2>
+          <p class="text-sm text-[#dcd2f7] mt-1">
+            Pilot your encrypted location packet through the twilight purple cloudscape! Collect mint <span class="text-teal-300 font-semibold">VPN Shields (+2)</span>, avoid rose <span class="text-rose-300 font-semibold">"Allow All" Traps</span>, and pass security checkpoints to earn a revive!
+          </p>
+        </div>
+
+        <!-- Game Controls & Audio Toggle -->
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="sound-toggle-btn" onclick="toggleAudio()" class="px-3.5 py-2 rounded-xl bg-[#16092e]/85 border border-purple-400/30 hover:border-purple-200 text-xs font-mono text-purple-100 flex items-center gap-2 transition">
+            <span id="sound-icon">🔊</span>
+            <span id="sound-label">SFX: ON</span>
+          </button>
+          <button onclick="resetGameFull()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-400 to-fuchsia-400 hover:from-purple-300 hover:to-fuchsia-300 text-[#120826] font-extrabold text-xs uppercase tracking-wider transition shadow-lg shadow-purple-500/25">
+            Restart Run
+          </button>
+        </div>
+      </div>
+
+      <!-- Legend Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs cloud-subcard rounded-2xl p-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-purple-300 inline-block shadow shadow-purple-300"></span>
+          <span class="text-[#dcd2f7]"><strong>Packet:</strong> Space / Click / Tap</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-sm bg-fuchsia-500 inline-block"></span>
+          <span class="text-[#dcd2f7]"><strong>Cloud Towers:</strong> Data Brokers</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-teal-300 inline-block"></span>
+          <span class="text-[#dcd2f7]"><strong>Mint Token:</strong> +2 VPN Shield</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-rose-400 inline-block"></span>
+          <span class="text-[#dcd2f7]"><strong>Rose Trap:</strong> Cookie Speed Surge</span>
+        </div>
+      </div>
+
+      <!-- Game Canvas Wrapper -->
+      <div class="relative w-full h-[420px] sm:h-[460px] rounded-3xl overflow-hidden border-2 border-purple-300/35 bg-[#120826] shadow-2xl select-none">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD Score Overlay -->
+        <div class="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+          <div class="flex items-center gap-3">
+            <div class="px-3.5 py-1.5 rounded-2xl bg-[#120826]/80 border border-purple-400/35 backdrop-blur-md">
+              <span class="text-xs font-mono text-purple-300 block">PRIVACY SCORE</span>
+              <span id="hud-score" class="text-xl font-extrabold font-mono text-teal-300">0</span>
+            </div>
+            <div class="px-3.5 py-1.5 rounded-2xl bg-[#120826]/80 border border-purple-400/35 backdrop-blur-md">
+              <span class="text-xs font-mono text-purple-300 block">BEST</span>
+              <span id="hud-best" class="text-xl font-extrabold font-mono text-white">0</span>
+            </div>
+          </div>
+
+          <!-- Active Debuff / Buff Warning Toast -->
+          <div id="hud-status-pill" class="hidden px-3.5 py-1.5 rounded-2xl bg-rose-950/90 border border-rose-400 text-rose-100 text-xs font-mono font-bold animate-bounce">
+            ⚠️ "ALLOW ALL" COOKIES: SPEED SURGE!
+          </div>
+        </div>
+
+        <!-- Start Screen Overlay -->
+        <div id="game-start-overlay" class="absolute inset-0 bg-[#120826]/75 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10">
+          <div class="w-16 h-16 rounded-2xl bg-purple-500/25 border border-purple-300 flex items-center justify-center text-purple-200 mb-4 shadow-lg shadow-purple-500/30">
+            <svg class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-[#f8f5ff]">Protect the GPS Cloud Packet</h3>
+          <p class="text-[#dcd2f7] text-sm sm:text-base max-w-md mt-2">
+            Tap, click, or press <kbd class="px-2 py-0.5 bg-purple-950 border border-purple-400/50 rounded text-purple-200 font-mono text-xs">SPACE</kbd> / <kbd class="px-2 py-0.5 bg-purple-950 border border-purple-400/50 rounded text-purple-200 font-mono text-xs">↑</kbd> to soar through the purple clouds and dodge data-broker towers.
+          </p>
+          <button onclick="startGame()" class="mt-6 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-purple-300 via-fuchsia-300 to-teal-200 hover:opacity-95 text-[#120826] font-extrabold text-sm uppercase tracking-wider transition transform hover:scale-105 shadow-xl shadow-purple-500/30">
+            Click or Press Space to Start
+          </button>
+        </div>
+
+        <!-- Educational Checkpoint / Crash Quiz Modal -->
+        <div id="game-quiz-modal" class="hidden absolute inset-0 bg-[#120826]/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 z-20 overflow-y-auto">
+          <div class="bg-[#1e0d3d] border border-purple-300/40 rounded-3xl max-w-xl w-full p-5 sm:p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-purple-400/25 pb-3">
+              <div>
+                <span id="quiz-modal-tag" class="px-2.5 py-0.5 rounded-lg bg-rose-500/25 text-rose-200 font-mono text-xs font-bold">CLOUD BREACH DETECTED</span>
+                <h3 class="text-lg sm:text-xl font-bold text-[#f8f5ff] mt-1">Security Checkpoint Quiz</h3>
+              </div>
+              <div class="text-right font-mono">
+                <span class="text-xs text-purple-300 block">RUN SCORE</span>
+                <span id="quiz-final-score" class="text-lg font-bold text-teal-300">0</span>
+              </div>
+            </div>
+
+            <p id="quiz-question-text" class="text-sm sm:text-base font-semibold text-[#f8f5ff] leading-snug">
+              Question loads here...
+            </p>
+
+            <div id="quiz-options-container" class="space-y-2">
+              <!-- Options injected dynamically -->
+            </div>
+
+            <!-- Immediate Explanatory Feedback inside Modal -->
+            <div id="quiz-explanation-box" class="hidden p-3.5 rounded-2xl bg-[#120826]/90 border border-purple-400/30 text-xs sm:text-sm space-y-1">
+              <div id="quiz-result-label" class="font-bold font-mono"></div>
+              <p id="quiz-result-detail" class="text-[#dcd2f7] leading-relaxed"></p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+              <button id="quiz-revive-btn" onclick="revivePlayer()" class="hidden px-5 py-2.5 rounded-xl bg-teal-300 hover:bg-teal-200 text-[#120826] font-extrabold text-xs uppercase tracking-wider transition">
+                ★ Use Checkpoint Revive
+              </button>
+              <button id="quiz-restart-btn" onclick="resetGameFull()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-300 to-fuchsia-300 hover:opacity-95 text-[#120826] font-extrabold text-xs uppercase tracking-wider transition">
+                Play Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Official Citations, Jurisdiction & Assignment Checklist -->
+    <footer class="cloud-card rounded-3xl p-6 sm:p-8 space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Credible Sources & Jurisdiction -->
+        <div class="lg:col-span-2 space-y-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-purple-500/20 border border-purple-400/30 text-purple-200 font-mono text-xs">
+            <span>Jurisdiction: United States (Federal)</span>
+          </div>
+          <h2 class="text-xl font-bold text-[#f8f5ff]">Credible Sources & Legal Authorities</h2>
+          <p class="text-xs sm:text-sm text-[#dcd2f7]">
+            All legal standards referenced in this learning module are governed under United States Federal Jurisdiction and enforced by the Federal Trade Commission (FTC).
+          </p>
+          <ul class="space-y-2.5 text-xs sm:text-sm text-[#dcd2f7] pt-1">
+            <li class="p-3 rounded-2xl cloud-subcard">
+              <strong class="text-teal-300">1. Federal Trade Commission (FTC) Act, Section 5 (15 U.S.C. § 45):</strong> Official enforcement guidance on geolocation privacy and unfair/deceptive data broker practices.
+              <a href="https://www.ftc.gov/business-guidance/privacy-security" target="_blank" rel="noopener noreferrer" class="text-teal-300 underline hover:text-teal-200 ml-1 font-mono">ftc.gov/privacy-security ↗</a>
+            </li>
+            <li class="p-3 rounded-2xl cloud-subcard">
+              <strong class="text-teal-300">2. Children's Online Privacy Protection Act (COPPA), 15 U.S.C. §§ 6501–6506 & 16 CFR Part 312:</strong> Federal statutory rules requiring verifiable parental consent prior to collecting precise geolocation information from children under 13.
+              <a href="https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa" target="_blank" rel="noopener noreferrer" class="text-teal-300 underline hover:text-teal-200 ml-1 font-mono">ftc.gov/coppa-rule ↗</a>
+            </li>
+            <li class="p-3 rounded-2xl cloud-subcard">
+              <strong class="text-fuchsia-300">3. ACM Code of Ethics and Professional Conduct (Section 1.6 – Respect Privacy):</strong> Computing industry standard establishing ethical obligations for data minimization and user consent.
+              <a href="https://www.acm.org/code-of-ethics" target="_blank" rel="noopener noreferrer" class="text-fuchsia-300 underline hover:text-fuchsia-200 ml-1 font-mono">acm.org/code-of-ethics ↗</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Student Submission & Peer Testing Helper -->
+        <div class="cloud-subcard rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="font-mono text-xs uppercase tracking-wider text-fuchsia-300 font-bold">Assignment Readiness</span>
+            <h3 class="text-base font-bold text-[#f8f5ff]">Submission & Peer Review Log</h3>
+            <p class="text-xs text-[#dcd2f7] leading-relaxed">
+              Before turning in your GitHub Pages URL for Performance Standard 5.3, verify your testing documentation:
+            </p>
+            <ul class="space-y-2 text-xs text-[#dcd2f7] pt-1">
+              <li class="flex items-center gap-2">
+                <input type="checkbox" checked class="accent-purple-400 rounded" />
+                <span>Standards 5.3.4 & 5.3.5 contrasted</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <input type="checkbox" checked class="accent-purple-400 rounded" />
+                <span>U.S. Federal jurisdiction & 2+ sources cited</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <input type="checkbox" id="peer-check" class="accent-purple-400 rounded" />
+                <label for="peer-check">Classmate playtested mini-game & feedback logged</label>
+              </li>
+            </ul>
+          </div>
+          <div class="p-3 rounded-xl bg-[#120826]/85 border border-purple-400/25 text-[11px] text-purple-200/80 font-mono">
+            Peer Feedback Revision Note: Widened cloud-tower gaps and added checkpoint revives after classmate playtesting improved early-run survivability.
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <script>
+    /* =========================================================================
+       1. WEB AUDIO API SYNTHESIZER (No external audio files required)
+       ========================================================================= */
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(type) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'flap') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(540, now + 0.09);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          osc.start(now);
+          osc.stop(now + 0.09);
+        } else if (type === 'score') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(580, now);
+          osc.frequency.setValueAtTime(780, now + 0.07);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'shield') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.06);
+          osc.frequency.setValueAtTime(1046.5, now + 0.12);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'trap' || type === 'crash') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(75, now + 0.25);
+          gain.gain.setValueAtTime(0.11, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+          osc.start(now);
+          osc.stop(now + 0.26);
+        }
+      } catch (e) {
+        // Ignore audio errors on restricted browsers
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
+      document.getElementById('sound-label').textContent = soundEnabled ? 'SFX: ON' : 'SFX: OFF';
+    }
+
+    /* =========================================================================
+       2. INTERACTIVE ETHICS VS. LAW CASE LAB (Standard 5.3.4 & 5.3.5)
+       ========================================================================= */
+    const scenarios = [
+      {
+        title: 'The "Free" BrightBeam Flashlight App',
+        desc: 'A free mobile flashlight app claims in its privacy policy that it "only uses device sensors to improve lighting performance." Behind the scenes, its code harvests precise GPS coordinates every 60 seconds and sells the movement logs to third-party data brokers without telling users.',
+        correct: 'both',
+        verdictTitle: 'Correct: Both an Ethical & Legal Violation!',
+        explanation: 'Ethically (5.3.4), a flashlight has zero functional need for GPS data—violating Data Minimization and user trust. Legally (5.3.5), lying in a privacy policy about data collection is a "deceptive act or practice" prohibited by Section 5 of the U.S. Federal Trade Commission (FTC) Act.',
+        takeaway: 'Key Rule: Deceptive tracking violates FTC Act Section 5 AND computing ethics.'
+      },
+      {
+        title: 'DinoQuest: Augmented Reality Game for Ages 7–12',
+        desc: 'An educational AR treasure-hunt app aimed at elementary school kids asks children to enter their home address and logs real-time GPS trails to place virtual dinosaurs, without ever contacting or verifying consent from a parent or guardian.',
+        correct: 'both',
+        verdictTitle: 'Correct: Direct COPPA Violation & Unethical Design!',
+        explanation: 'Under U.S. Federal Law (COPPA, 15 U.S.C. §§ 6501–6506), operators of apps directed to children under 13 MUST obtain verifiable parental consent before collecting precise geolocation data. Ethically, exposing minors’ live home locations creates severe physical safety hazards.',
+        takeaway: 'Key Rule: Under-13 GPS tracking without parental consent is strictly illegal under COPPA.'
+      },
+      {
+        title: 'PulseMap: Teen Social Check-In App',
+        desc: 'A social app for high schoolers (ages 14–18) accurately discloses in its 40-page Terms of Service that live GPS location is shared publicly with all followers by default. Turning off live location requires navigating six hidden sub-menus.',
+        correct: 'ethics',
+        verdictTitle: 'Correct: Primarily an Ethical Violation (Dark Pattern)!',
+        explanation: 'Because users are over 13 (outside COPPA) and the behavior was technically disclosed in the Terms of Service, it may not violate a specific U.S. federal statute. However, using confusing "dark patterns" to trick teens into broadcasting their physical location violates Standard 5.3.4 (Ethical Duty to Protect User Safety & Autonomy).',
+        takeaway: 'Key Rule: Legal compliance is the bare minimum—ethical developers build "Privacy by Default."'
+      }
+    ];
+
+    let activeScenarioIndex = 0;
+    const solvedScenarios = new Set();
+
+    function selectScenario(idx) {
+      activeScenarioIndex = idx;
+      const sc = scenarios[idx];
+
+      // Update Tab Styling (Purple Cloud Theme)
+      for (let i = 0; i < scenarios.length; i++) {
+        const tab = document.getElementById(`tab-${i}`);
+        if (i === idx) {
+          tab.className = 'px-4 py-2 rounded-xl text-sm font-semibold transition border bg-purple-500/30 border-purple-300 text-white shadow-sm';
+        } else {
+          tab.className = 'px-4 py-2 rounded-xl text-sm font-semibold transition border bg-[#16092e]/80 border-purple-400/25 text-purple-300 hover:text-white';
+        }
+      }
+
+      document.getElementById('case-badge').textContent = `SCENARIO ${idx + 1} OF 3`;
+      document.getElementById('case-title').textContent = sc.title;
+      document.getElementById('case-desc').textContent = sc.desc;
+      document.getElementById('case-status').textContent = solvedScenarios.has(idx) ? '✓ Completed' : 'Unsolved';
+      document.getElementById('case-status').className = solvedScenarios.has(idx)
+        ? 'text-xs font-mono text-teal-300 font-bold'
+        : 'text-xs font-mono text-purple-300';
+
+      // Reset feedback box
+      document.getElementById('case-feedback-placeholder').classList.remove('hidden');
+      document.getElementById('case-feedback-content').classList.add('hidden');
+    }
+
+    function evaluateScenario(choice) {
+      const sc = scenarios[activeScenarioIndex];
+      const isCorrect = choice === sc.correct;
+
+      const placeholder = document.getElementById('case-feedback-placeholder');
+      const content = document.getElementById('case-feedback-content');
+      const verdict = document.getElementById('feedback-verdict');
+      const heading = document.getElementById('feedback-heading');
+      const explanation = document.getElementById('feedback-explanation');
+      const takeaway = document.getElementById('feedback-takeaway');
+
+      placeholder.classList.add('hidden');
+      content.classList.remove('hidden');
+
+      if (isCorrect) {
+        playTone('score');
+        solvedScenarios.add(activeScenarioIndex);
+        verdict.textContent = '✓ ACCURATE ANALYSIS';
+        verdict.className = 'inline-block px-3 py-1 rounded-lg text-xs font-bold font-mono bg-teal-500/20 text-teal-200 border border-teal-400/40';
+        heading.textContent = sc.verdictTitle;
+        document.getElementById('case-status').textContent = '✓ Completed';
+        document.getElementById('case-status').className = 'text-xs font-mono text-teal-300 font-bold';
+      } else {
+        playTone('trap');
+        verdict.textContent = '✗ NOT QUITE — REVIEW THE DISTINCTION';
+        verdict.className = 'inline-block px-3 py-1 rounded-lg text-xs font-bold font-mono bg-rose-500/25 text-rose-200 border border-rose-400/40';
+        heading.textContent = sc.verdictTitle;
+      }
+
+      explanation.textContent = sc.explanation;
+      takeaway.textContent = sc.takeaway;
+
+      updateMasteryTracker();
+    }
+
+    /* =========================================================================
+       3. ASSIGNMENT-ALIGNED CHECKPOINT QUIZ BANK
+       ========================================================================= */
+    const quizQuestions = [
+      {
+        q: "Applications that record your location using GPS are common. Which of the following is a legitimate concern when using these apps?",
+        options: [
+          "GPS satellites will drain your home Wi-Fi bandwidth.",
+          "Your real-time physical movements and home/school routines can be sold to third-party data brokers or stalkers.",
+          "Using GPS permanently erases encrypted files on your phone.",
+          "GPS signals allow websites to bypass your password manager."
+        ],
+        answerIndex: 1,
+        explanation: "Continuous GPS logging reveals sensitive daily patterns (where you live, attend school, or seek medical care), which data brokers frequently buy and sell without explicit user awareness."
+      },
+      {
+        q: "What data most likely could be captured and stored when using a mobile navigation system?",
+        options: [
+          "Your bank PIN and biometric fingerprint template.",
+          "Your exact coordinates, travel speed, timestamps, and frequent destinations (Home/Work).",
+          "Only your phone's battery temperature.",
+          "Your offline text message drafts."
+        ],
+        answerIndex: 1,
+        explanation: "Navigation apps log precise latitude/longitude coordinates, speed, route timestamps, and saved destinations to calculate traffic—making encryption and data minimization vital."
+      },
+      {
+        q: "In software companies, what is the primary purpose of Non-Disclosure Agreements (NDAs) signed by developers?",
+        options: [
+          "To legally prevent employees from sharing proprietary code, security architectures, or confidential user data with unauthorized parties.",
+          "To allow companies to ignore federal laws like COPPA.",
+          "To force customers to share their GPS location publicly.",
+          "To replace encryption on public Wi-Fi networks."
+        ],
+        answerIndex: 0,
+        explanation: "NDAs legally bind developers and contractors to confidentiality, protecting trade secrets and sensitive customer datasets from unauthorized leaks."
+      },
+      {
+        q: "Which of the following options can best assist you in protecting your location & internet privacy?",
+        options: [
+          "Selecting 'Allow Always' for location permissions on every free game.",
+          "Setting app location permissions to 'While Using the App,' disabling precise location when unnecessary, and using a VPN/HTTPS.",
+          "Posting live geotagged photos on public social media profiles.",
+          "Using the same password across all mapping and social apps."
+        ],
+        answerIndex: 1,
+        explanation: "Practicing least-privilege permissions ('While Using' + Approximate Location) and encrypting traffic via HTTPS/VPN dramatically reduces passive tracking."
+      },
+      {
+        q: "Which of the following is NOT a valid concern when trying to protect your Internet privacy?",
+        options: [
+          "Third-party tracking cookies building an advertising profile across websites.",
+          "Unencrypted public Wi-Fi hotspots intercepting your browsing traffic.",
+          "The physical color of your smartphone's protective case.",
+          "Apps collecting precise GPS coordinates in the background without disclosure."
+        ],
+        answerIndex: 2,
+        explanation: "While tracking cookies, unencrypted Wi-Fi, and background GPS collection are real digital privacy threats, the physical color of your phone case has zero impact on cybersecurity."
+      }
+    ];
+
+    let quizPassedOnce = false;
+    let reviveUsedThisRun = false;
+    let currentQuizObj = null;
+
+    function updateMasteryTracker() {
+      document.getElementById('tracker-cases').textContent = `${solvedScenarios.size} / 3`;
+      if (quizPassedOnce) {
+        const qEl = document.getElementById('tracker-quiz');
+        qEl.textContent = 'Passed ✓';
+        qEl.className = 'font-mono font-bold text-teal-300';
+      }
+      if (solvedScenarios.size === 3 && quizPassedOnce) {
+        document.getElementById('certified-badge').classList.remove('hidden');
+      }
+    }
+
+    /* =========================================================================
+       4. FLAPPY BIRD MINI-GAME ENGINE ("Data Leak Dodger" - Purple Cloudscape)
+       ========================================================================= */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Logical dimensions (scaled dynamically to container)
+    let width = 800;
+    let height = 440;
+
+    // Parallax Purple Clouds & Starlight Arrays
+    let bgClouds = [];
+    let fgClouds = [];
+    let stars = [];
+
+    function initSkyElements() {
+      bgClouds = [];
+      fgClouds = [];
+      stars = [];
+
+      for (let i = 0; i < 28; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * (height * 0.72),
+          r: 0.8 + Math.random() * 1.6,
+          twinkle: Math.random() * Math.PI * 2
+        });
+      }
+
+      for (let i = 0; i < 6; i++) {
+        bgClouds.push({
+          x: (width / 5) * i + Math.random() * 60,
+          y: 35 + Math.random() * (height * 0.45),
+          scale: 0.75 + Math.random() * 0.45,
+          speed: 0.35 + Math.random() * 0.25
+        });
+      }
+
+      for (let i = 0; i < 5; i++) {
+        fgClouds.push({
+          x: (width / 4) * i + Math.random() * 80,
+          y: height - 42 - Math.random() * 35,
+          scale: 0.9 + Math.random() * 0.5,
+          speed: 0.85 + Math.random() * 0.35
+        });
+      }
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      width = rect.width;
+      height = rect.height;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (bgClouds.length === 0) initSkyElements();
+      if (gameState === 'START') {
+        drawScene();
+      }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Game State
+    let gameState = 'START'; // START, PLAYING, QUIZ
+    let score = 0;
+    let bestScore = 0;
+    let frameCount = 0;
+    let trapTimer = 0; // frames remaining for "Allow All Cookies" speed surge
+    let animationId = null;
+
+    // Player (Encrypted Location Packet)
+    const player = {
+      x: 110,
+      y: 200,
+      radius: 17,
+      vy: 0,
+      gravity: 0.36,
+      lift: -6.8
+    };
+
+    // Obstacles & Collectibles
+    let pipes = [];
+    let tokens = [];
+    let particles = [];
+
+    const obstacleLabels = [
+      '3RD-PARTY BROKER',
+      'HIDDEN GPS LOG',
+      'UNENCRYPTED DB',
+      'DARK PATTERN',
+      'STALKERWARE API'
+    ];
+
+    function spawnPipe() {
+      const pipeWidth = 68;
+      // Generous, playable gap height adapted to canvas height
+      const gapHeight = Math.max(138, Math.min(165, height * 0.36));
+      const minTop = 48;
+      const maxTop = height - gapHeight - 48;
+      const topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
+      const label = obstacleLabels[Math.floor(Math.random() * obstacleLabels.length)];
+
+      pipes.push({
+        x: width + 20,
+        width: pipeWidth,
+        topHeight: topHeight,
+        bottomY: topHeight + gapHeight,
+        passed: false,
+        label: label
+      });
+
+      // Spawn a collectible token halfway to the next pipe 75% of the time
+      if (Math.random() < 0.78) {
+        const isGood = Math.random() < 0.65; // 65% Green VPN Shield, 35% Red Cookie Trap
+        tokens.push({
+          x: width + 20 + 165,
+          y: Math.max(60, Math.min(height - 60, topHeight + gapHeight / 2 + (Math.random() * 80 - 40))),
+          radius: 14,
+          type: isGood ? 'shield' : 'trap',
+          collected: false
+        });
+      }
+    }
+
+    function createParticles(x, y, color, count = 10) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
+          life: 25 + Math.random() * 15,
+          color
+        });
+      }
+    }
+
+    function flap() {
+      if (gameState === 'START') {
+        startGame();
+        return;
+      }
+      if (gameState === 'PLAYING') {
+        player.vy = player.lift;
+        playTone('flap');
+        createParticles(player.x - 10, player.y, '#e879f9', 6);
+      }
+    }
+
+    // Input Listeners (Keyboard + Pointer/Touch)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        // Prevent page scrolling when playing or starting game
+        if (document.activeElement.tagName !== 'BUTTON' && document.activeElement.tagName !== 'INPUT') {
+          e.preventDefault();
+        }
+        if (gameState === 'PLAYING' || gameState === 'START') {
+          flap();
+        }
+      }
+    });
+
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      flap();
+    });
+
+    function startGame() {
+      initAudio();
+      document.getElementById('game-start-overlay').classList.add('hidden');
+      document.getElementById('game-quiz-modal').classList.add('hidden');
+      if (gameState !== 'PLAYING') {
+        resetEntities();
+        gameState = 'PLAYING';
+        player.vy = player.lift;
+        playTone('flap');
+        if (!animationId) gameLoop();
+      }
+    }
+
+    function resetEntities() {
+      player.x = Math.min(120, width * 0.22);
+      player.y = height * 0.45;
+      player.vy = 0;
+      pipes = [];
+      tokens = [];
+      particles = [];
+      frameCount = 0;
+      trapTimer = 0;
+      document.getElementById('hud-status-pill').classList.add('hidden');
+      spawnPipe();
+    }
+
+    function resetGameFull() {
+      score = 0;
+      reviveUsedThisRun = false;
+      document.getElementById('hud-score').textContent = '0';
+      document.getElementById('game-quiz-modal').classList.add('hidden');
+      document.getElementById('game-start-overlay').classList.add('hidden');
+      resetEntities();
+      gameState = 'PLAYING';
+      player.vy = player.lift;
+      playTone('flap');
+      if (!animationId) gameLoop();
+    }
+
+    function revivePlayer() {
+      // Clear nearby pipes so player has a safe runway upon reviving
+      pipes = pipes.filter(p => p.x > player.x + 220);
+      tokens = tokens.filter(t => t.x > player.x + 220);
+      player.y = height * 0.45;
+      player.vy = -4;
+      trapTimer = 0;
+      reviveUsedThisRun = true;
+      document.getElementById('hud-status-pill').classList.add('hidden');
+      document.getElementById('game-quiz-modal').classList.add('hidden');
+      gameState = 'PLAYING';
+      playTone('shield');
+    }
+
+    function triggerCrashCheckpoint() {
+      gameState = 'QUIZ';
+      playTone('crash');
+      createParticles(player.x, player.y, '#fb7185', 22);
+
+      if (score > bestScore) {
+        bestScore = score;
+        document.getElementById('hud-best').textContent = bestScore;
+      }
+
+      // Open Checkpoint Quiz Modal
+      const modal = document.getElementById('game-quiz-modal');
+      modal.classList.remove('hidden');
+      document.getElementById('quiz-final-score').textContent = score;
+      document.getElementById('quiz-explanation-box').classList.add('hidden');
+      document.getElementById('quiz-revive-btn').classList.add('hidden');
+
+      // Pick random question from bank
+      currentQuizObj = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+      document.getElementById('quiz-question-text').textContent = currentQuizObj.q;
+
+      const optionsContainer = document.getElementById('quiz-options-container');
+      optionsContainer.innerHTML = '';
+
+      currentQuizObj.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left p-3 rounded-2xl bg-[#120826]/90 hover:bg-purple-900/60 border border-purple-400/25 text-xs sm:text-sm text-[#f8f5ff] transition flex items-start gap-2.5';
+        btn.innerHTML = `<span class="font-mono font-bold text-purple-300">${String.fromCharCode(65 + idx)}.</span><span>${optText}</span>`;
+        btn.onclick = () => handleQuizAnswer(idx, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleQuizAnswer(selectedIndex, clickedBtn) {
+      const optionsContainer = document.getElementById('quiz-options-container');
+      const allBtns = optionsContainer.querySelectorAll('button');
+      allBtns.forEach(b => b.disabled = true);
+
+      const isCorrect = selectedIndex === currentQuizObj.answerIndex;
+      const expBox = document.getElementById('quiz-explanation-box');
+      const resLabel = document.getElementById('quiz-result-label');
+      const resDetail = document.getElementById('quiz-result-detail');
+
+      expBox.classList.remove('hidden');
+      resDetail.textContent = currentQuizObj.explanation;
+
+      if (isCorrect) {
+        playTone('shield');
+        clickedBtn.className = 'w-full text-left p-3 rounded-2xl bg-teal-950/80 border border-teal-300 text-xs sm:text-sm text-teal-100 flex items-start gap-2.5';
+        resLabel.textContent = '✓ CORRECT — CLOUD SECURITY PATCH APPLIED!';
+        resLabel.className = 'font-bold font-mono text-teal-300';
+
+        quizPassedOnce = true;
+        updateMasteryTracker();
+
+        if (!reviveUsedThisRun) {
+          document.getElementById('quiz-revive-btn').classList.remove('hidden');
+        }
+      } else {
+        playTone('trap');
+        clickedBtn.className = 'w-full text-left p-3 rounded-2xl bg-rose-950/80 border border-rose-400 text-xs sm:text-sm text-rose-100 flex items-start gap-2.5';
+        allBtns[currentQuizObj.answerIndex].className = 'w-full text-left p-3 rounded-2xl bg-teal-950/50 border border-teal-400/60 text-xs sm:text-sm text-teal-200 flex items-start gap-2.5';
+        resLabel.textContent = '✗ INCORRECT — REVIEW THE EXPLANATION BELOW';
+        resLabel.className = 'font-bold font-mono text-rose-300';
+      }
+    }
+
+    function updatePhysics() {
+      // Drift parallax clouds gently even on START screen
+      bgClouds.forEach(c => {
+        c.x -= c.speed;
+        if (c.x < -160) c.x = width + 140;
+      });
+      fgClouds.forEach(c => {
+        c.x -= c.speed;
+        if (c.x < -180) c.x = width + 160;
+      });
+
+      if (gameState !== 'PLAYING') return;
+
+      frameCount++;
+
+      // Speed calculation (increases gently with score, or temporarily surges from Red Cookie Trap)
+      let baseSpeed = 3.1 + Math.min(1.6, score * 0.06);
+      if (trapTimer > 0) {
+        trapTimer--;
+        baseSpeed *= 1.38;
+        if (trapTimer === 0) {
+          document.getElementById('hud-status-pill').classList.add('hidden');
+        }
+      }
+
+      // Spawn pipes periodically
+      const spawnInterval = Math.max(92, Math.floor(330 / baseSpeed));
+      if (frameCount % spawnInterval === 0) {
+        spawnPipe();
+      }
+
+      // Player gravity & position
+      player.vy += player.gravity;
+      player.y += player.vy;
+
+      // Floor & Ceiling collision
+      if (player.y + player.radius >= height - 14 || player.y - player.radius <= 0) {
+        triggerCrashCheckpoint();
+        return;
+      }
+
+      // Update Pipes
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        const p = pipes[i];
+        p.x -= baseSpeed;
+
+        // Score point when passing pipe
+        if (!p.passed && p.x + p.width < player.x) {
+          p.passed = true;
+          score += 1;
+          document.getElementById('hud-score').textContent = score;
+          playTone('score');
+        }
+
+        // Forgiving Circle-to-Rectangle collision (slightly inset hitbox for fair play)
+        const hitR = player.radius - 3;
+        const withinX = player.x + hitR > p.x && player.x - hitR < p.x + p.width;
+        const hitTop = player.y - hitR < p.topHeight;
+        const hitBottom = player.y + hitR > p.bottomY;
+
+        if (withinX && (hitTop || hitBottom)) {
+          triggerCrashCheckpoint();
+          return;
+        }
+
+        if (p.x + p.width < -20) {
+          pipes.splice(i, 1);
+        }
+      }
+
+      // Update Collectibles (VPN Shields & Cookie Traps)
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        const t = tokens[i];
+        t.x -= baseSpeed;
+
+        const dx = player.x - t.x;
+        const dy = player.y - t.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (!t.collected && dist < player.radius + t.radius) {
+          t.collected = true;
+          if (t.type === 'shield') {
+            score += 2;
+            document.getElementById('hud-score').textContent = score;
+            playTone('shield');
+            createParticles(t.x, t.y, '#5eead4', 14);
+          } else {
+            // Red "Allow All Cookies" Trap triggers temporary speed surge
+            trapTimer = 150; // ~2.5 seconds at 60fps
+            document.getElementById('hud-status-pill').classList.remove('hidden');
+            playTone('trap');
+            createParticles(t.x, t.y, '#fb7185', 14);
+          }
+        }
+
+        if (t.collected || t.x < -30) {
+          tokens.splice(i, 1);
+        }
+      }
+
+      // Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.life--;
+        if (pt.life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    // Helper: Draw a fluffy stylized cumulus cloud in Canvas
+    function drawCumulusCloud(cx, cy, scale, fillStyle, rimStyle) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = fillStyle;
+      ctx.beginPath();
+      ctx.arc(-34, 6, 22, 0, Math.PI * 2);
+      ctx.arc(-10, -8, 28, 0, Math.PI * 2);
+      ctx.arc(20, -4, 24, 0, Math.PI * 2);
+      ctx.arc(42, 8, 18, 0, Math.PI * 2);
+      ctx.rect(-34, 6, 76, 22);
+      ctx.fill();
+
+      if (rimStyle) {
+        ctx.strokeStyle = rimStyle;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(-10, -8, 28, Math.PI * 1.1, Math.PI * 1.85);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawScene() {
+      // Twilight Purple Sky Gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+      skyGrad.addColorStop(0, '#120826');
+      skyGrad.addColorStop(0.55, '#2b1254');
+      skyGrad.addColorStop(1, '#4c1d95');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Twinkling Starlight in Upper Twilight Sky
+      stars.forEach((st, idx) => {
+        const alpha = 0.25 + 0.45 * Math.abs(Math.sin(frameCount * 0.03 + st.twinkle + idx));
+        ctx.fillStyle = `rgba(243, 232, 255, ${alpha.toFixed(2)})`;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Distant Lavender Cumulus Clouds
+      bgClouds.forEach(c => {
+        drawCumulusCloud(
+          c.x,
+          c.y,
+          c.scale,
+          'rgba(168, 85, 247, 0.18)',
+          'rgba(233, 213, 255, 0.22)'
+        );
+      });
+
+      // Draw Pipes (Frosted Amethyst Data-Broker Cloud Towers)
+      pipes.forEach(p => {
+        const gradTop = ctx.createLinearGradient(p.x, 0, p.x + p.width, 0);
+        gradTop.addColorStop(0, '#3b0764');
+        gradTop.addColorStop(0.5, '#6b21a8');
+        gradTop.addColorStop(1, '#2e1065');
+
+        ctx.fillStyle = gradTop;
+        ctx.fillRect(p.x, 0, p.width, p.topHeight);
+        ctx.strokeStyle = '#e879f9';
+        ctx.lineWidth = 1.75;
+        ctx.strokeRect(p.x, 0, p.width, p.topHeight);
+
+        // Top Cap
+        ctx.fillStyle = '#a855f7';
+        ctx.fillRect(p.x - 4, p.topHeight - 16, p.width + 8, 16);
+        ctx.strokeStyle = '#f5d0fe';
+        ctx.strokeRect(p.x - 4, p.topHeight - 16, p.width + 8, 16);
+
+        // Bottom Pillar
+        const bottomHeight = height - p.bottomY - 14;
+        ctx.fillStyle = gradTop;
+        ctx.fillRect(p.x, p.bottomY, p.width, bottomHeight);
+        ctx.strokeStyle = '#e879f9';
+        ctx.strokeRect(p.x, p.bottomY, p.width, bottomHeight);
+
+        // Bottom Cap
+        ctx.fillStyle = '#a855f7';
+        ctx.fillRect(p.x - 4, p.bottomY, p.width + 8, 16);
+        ctx.strokeStyle = '#f5d0fe';
+        ctx.strokeRect(p.x - 4, p.bottomY, p.width + 8, 16);
+
+        // Vertical Label on Taller Pillar
+        ctx.save();
+        ctx.fillStyle = '#faf5ff';
+        ctx.font = 'bold 12px "HelvetiHand", "Patrick Hand", "Comic Neue", sans-serif';
+        ctx.textAlign = 'center';
+        if (p.topHeight > 110) {
+          ctx.translate(p.x + p.width / 2, p.topHeight / 2);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText(p.label, 0, 3);
+        } else if (bottomHeight > 110) {
+          ctx.translate(p.x + p.width / 2, p.bottomY + bottomHeight / 2);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText(p.label, 0, 3);
+        }
+        ctx.restore();
+      });
+
+      // Lower Foreground Soft Orchid Cloud Bank
+      fgClouds.forEach(c => {
+        drawCumulusCloud(
+          c.x,
+          c.y,
+          c.scale,
+          'rgba(216, 180, 254, 0.16)',
+          'rgba(245, 208, 254, 0.25)'
+        );
+      });
+
+      // Draw Collectibles
+      tokens.forEach(t => {
+        ctx.save();
+        ctx.translate(t.x, t.y);
+        if (t.type === 'shield') {
+          // Mint VPN Encryption Token
+          ctx.fillStyle = 'rgba(94, 234, 212, 0.26)';
+          ctx.beginPath();
+          ctx.arc(0, 0, t.radius + 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#5eead4';
+          ctx.beginPath();
+          ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#120826';
+          ctx.font = 'bold 12px "HelvetiHand", "Patrick Hand", "Comic Neue", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('VPN', 0, 1);
+        } else {
+          // Rose "Allow All Cookies" Trap
+          ctx.fillStyle = 'rgba(251, 113, 133, 0.28)';
+          ctx.beginPath();
+          ctx.arc(0, 0, t.radius + 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#fb7185';
+          ctx.beginPath();
+          ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 14px "HelvetiHand", "Patrick Hand", "Comic Neue", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('!', 0, 1);
+        }
+        ctx.restore();
+      });
+
+      // Draw Floor Cloud Bank Strip
+      ctx.fillStyle = '#1a0b36';
+      ctx.fillRect(0, height - 14, width, 14);
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, height - 14);
+      ctx.lineTo(width, height - 14);
+      ctx.stroke();
+
+      // Draw Particles
+      particles.forEach(pt => {
+        ctx.fillStyle = pt.color;
+        ctx.globalAlpha = Math.max(0, pt.life / 35);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      // Draw Player Avatar (Encrypted Cloud-Shield GPS Packet)
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      const tilt = Math.max(-0.45, Math.min(0.55, player.vy * 0.065));
+      ctx.rotate(tilt);
+
+      // Outer Orchid/Rose Halo
+      ctx.fillStyle = trapTimer > 0 ? 'rgba(251, 113, 133, 0.35)' : 'rgba(232, 121, 249, 0.3)';
+      ctx.beginPath();
+      ctx.arc(0, 0, player.radius + 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core Packet Body
+      ctx.fillStyle = trapTimer > 0 ? '#fb7185' : '#e9d5ff';
+      ctx.beginPath();
+      ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner Deep-Plum Shield Emblem
+      ctx.fillStyle = '#1a0b36';
+      ctx.beginPath();
+      ctx.moveTo(0, -9);
+      ctx.lineTo(8, -5);
+      ctx.lineTo(8, 2);
+      ctx.quadraticCurveTo(8, 8, 0, 11);
+      ctx.quadraticCurveTo(-8, 8, -8, 2);
+      ctx.lineTo(-8, -5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Glowing Mint GPS Pin Dot inside Shield
+      ctx.fillStyle = '#5eead4';
+      ctx.beginPath();
+      ctx.arc(0, -1, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function gameLoop() {
+      updatePhysics();
+      drawScene();
+      animationId = requestAnimationFrame(gameLoop);
+    }
+
+    // Initialize on Window Load
+    window.onload = function () {
+      resizeCanvas();
+      selectScenario(0);
+      drawScene();
+    };
+  </script>
+</body>
+</html>
